@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.server.mapper.LibraryMapper">
+    <resultMap id="LibraryResultMap" type="com.server.entity.Library">
+        <id column="library_id" property="libraryId" />
+        <result column="library_name" property="libraryName" />
+        <result column="library_img" property="libraryImg" />
+        <result column="library_des" property="libraryDes" />
+        <result column="library_creatTime" property="libraryCreatTime" />
+        <result column="library_status" property="libraryStatus" />
+        <result column="library_isDelete" property="libraryIsDelete" />
+        <result column="admin_id" property="adminId"></result>
+        <association property="mallpersonnels" resultMap="adminMap"></association>
+    </resultMap>
+
+    <resultMap id="adminMap" type="com.server.entity.Mallpersonnel">
+        <id column="pId"  property="pId"/>
+        <result column="pName" property="pName"/>
+    </resultMap>
+    <!-- 分页查询图书馆数据-->
+    <select id="findPage" resultMap="LibraryResultMap">
+        select  * from  library
+        inner join mallpersonnel
+        on mallpersonnel.pId = library.admin_id
+        <!--        <if test="queryString !=null and queryString.length>0">-->
+        <!--            &#45;&#45; 搜索功能-->
+        <!--            where (college_name like  concat('%', #{queryString},'%') or college_nmber like  concat('%', #{queryString},'%'))-->
+        <!--              and college_isDelete = 0 and college_status =1-->
+        <!--        </if>-->
+        <choose>
+            <when test="queryString !=null and queryString.length>0">
+                -- 搜索功能
+                where (library_name like  concat('%', #{queryString},'%') or library_id like  concat('%', #{queryString},'%'))
+                and library_isDelete = 0
+            </when>
+            <otherwise>
+                where  library_isDelete = 0
+            </otherwise>
+        </choose>
+                order by library_name desc
+    </select>
+
+    <insert id="insert" parameterType="com.server.entity.Library">
+        insert into library (admin_id,library_name,library_des,library_img) values (#{adminId},#{libraryName},#{libraryDes},#{libraryImg})
+    </insert>
+
+    <update id="update" parameterType="com.server.entity.Library">
+        update library
+        <set>
+            <if test="libraryName !=null">
+                library_name=#{libraryName},
+            </if>
+            <if test="libraryDes !=null">
+                library_des = #{libraryDes},
+            </if>
+            <if test="libraryImg !=null">
+                library_img = #{libraryImg},
+            </if>
+            <if test="adminId !=null">
+                admin_id = #{adminId},
+            </if>
+            <if test="libraryStatus !=null">
+                library_status = #{libraryStatus}
+            </if>
+        </set>
+        where library_id = #{libraryId}
+    </update>
+
+    <update id="delete" parameterType="com.server.entity.Library">
+        update library
+        <set>
+            <if test="classIsDelete !=null">
+                library_isDelete = #{libraryIsDelete},
+            </if>
+        </set>
+        where library_id = #{libraryId}
+    </update>
+
+    <update id="updateShow" parameterType="com.server.entity.Library">
+        update library
+        <set>
+            <if test="libraryStatus !=null">
+                library_status = #{libraryStatus},
+            </if>
+        </set>
+        where library_id = #{libraryId}
+    </update>
+
+    <select id="findLibraryInfo" resultType="com.server.entity.Library">
+        select  * from  library where  library_isDelete = 0 and library_status = 1
+    </select>
+</mapper>

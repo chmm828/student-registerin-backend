@@ -1,0 +1,102 @@
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.server.mapper.MajorMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="MajorResultMap" type="com.server.entity.Major">
+        <id column="major_id" property="majorId" />
+        <result column="college_id" property="collegeId" />
+        <result column="major_name" property="majorName" />
+        <result column="major_des" property="majorDes" />
+        <result column="major_creatTime" property="majorCreatTime" />
+        <result column="major_number" property="majorNumber" />
+        <result column="major_status" property="majorStatus" />
+        <result column="major_isDelete" property="majorIsDelete" />
+        <association property="colleges" resultMap="CollegeResult"></association>
+    </resultMap>
+
+    <resultMap id="CollegeResult" type="com.server.entity.College">
+        <id property="collegeId" column="college_id"/>
+        <result property="collegeName" column="college_name"/>
+        <result property="collegeImg" column="college_img"/>
+        <result property="collegeDes" column="college_des"/>
+        <result property="collegeNumber" column="college_number"/>
+        <result property="collegeCreateTime" column="college_createTime"/>
+        <result property="collegeIsDelete" column="college_isDelete"/>
+        <result property="collegeStatus" column="college_status"/>
+    </resultMap>
+
+    <!-- 分页查询学院数据-->
+    <select id="findPage"  resultMap="MajorResultMap">
+        select * FROM major AS m
+        INNER JOIN college AS c
+        ON m.college_id = c.college_id
+        <!--        <if test="queryString !=null and queryString.length>0">-->
+        <!--            &#45;&#45; 搜索功能-->
+        <!--            where (college_name like  concat('%', #{queryString},'%') or college_nmber like  concat('%', #{queryString},'%'))-->
+        <!--              and college_isDelete = 0 and college_status =1-->
+        <!--        </if>-->
+        <choose>
+            <when test="queryString !=null and queryString.length>0">
+                -- 搜索功能
+                where (m.major_name like  concat('%', #{queryString},'%') or m.major_number like  concat('%', #{queryString},'%'))
+                and m.major_isDelete = 0
+                order by major_name desc
+            </when>
+            <otherwise>
+                WHERE m.major_isDelete = 0
+                order by major_name desc
+            </otherwise>
+        </choose>
+    </select>
+
+    <insert id="insert" parameterType="com.server.entity.Major">
+        insert into major(college_id,major_name,major_des,major_number) values (#{collegeId},#{majorName},#{majorDes},#{majorNumber})
+    </insert>
+
+    <update id="update" parameterType="com.server.entity.Major">
+        update major
+        <set>
+            <if test="collegeId !=null">
+                college_id=#{collegeId},
+            </if>
+            <if test="majorName !=null">
+                major_name=#{majorName},
+            </if>
+            <if test="majorDes !=null">
+                major_des = #{majorDes},
+            </if>
+            <if test="majorNumber !=null">
+                major_number = #{majorNumber},
+            </if>
+            <if test="majorStatus !=null">
+                major_status = #{majorStatus},
+            </if>
+        </set>
+        where major_id = #{majorId}
+    </update>
+
+    <update id="delete" parameterType="com.server.entity.Major">
+        update major
+        <set>
+            <if test="majorIsDelete !=null">
+                major_isDelete = #{majorIsDelete},
+            </if>
+        </set>
+        where major_id = #{majorId}
+    </update>
+
+    <update id="updateShow" parameterType="com.server.entity.Major">
+        update major
+        <set>
+            <if test="majorStatus !=null">
+                major_status = #{majorStatus},
+            </if>
+        </set>
+        where major_id = #{majorId}
+    </update>
+
+    <select id="findMajorInfo" resultType="com.server.entity.Major">
+        select * from major where  major_isDelete = 0 and major_status =1 order by major_name desc
+    </select>
+</mapper>

@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.server.mapper.ClassMapper">
+    <!-- 通用查询映射结果 -->
+    <resultMap id="ClassResultMap" type="com.server.entity.ClassEntity">
+        <id column="class_id" property="classId" />
+        <result column="major_id" property="majorId" />
+        <result column="class_name" property="className" />
+        <result column="class_des" property="classDes" />
+        <result column="class_number" property="classNumber" />
+        <result column="class_creatTime" property="classCreatTime" />
+        <result column="class_isDelete" property="classIsDelete" />
+        <result column="class_status" property="classStatus" />
+        <association property="majors" resultMap="MajorResultMap" />
+        <association property="colleges" resultMap="CollegeResult"/>
+    </resultMap>
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="MajorResultMap" type="com.server.entity.Major">
+        <id column="major_id" property="majorId" />
+        <result column="college_id" property="collegeId" />
+        <result column="major_name" property="majorName" />
+        <result column="major_des" property="majorDes" />
+        <result column="major_creatTime" property="majorCreatTime" />
+        <result column="major_number" property="majorNumber" />
+        <result column="major_status" property="majorStatus" />
+        <result column="major_isDelete" property="majorIsDelete" />
+    </resultMap>
+
+    <resultMap id="CollegeResult" type="com.server.entity.College">
+        <id property="collegeId" column="college_id"/>
+        <result property="collegeName" column="college_name"/>
+        <result property="collegeImg" column="college_img"/>
+        <result property="collegeDes" column="college_des"/>
+        <result property="collegeNumber" column="college_number"/>
+        <result property="collegeCreateTime" column="college_createTime"/>
+        <result property="collegeIsDelete" column="college_isDelete"/>
+        <result property="collegeStatus" column="college_status"/>
+    </resultMap>
+    <!-- 分页查询学院数据-->
+    <select id="findPage" resultMap="ClassResultMap">
+        select  * from  class
+        inner join major
+        on class.major_id = major.major_id
+        inner join college
+        on college.college_id = major.college_id
+
+        <!--        <if test="queryString !=null and queryString.length>0">-->
+        <!--            &#45;&#45; 搜索功能-->
+        <!--            where (college_name like  concat('%', #{queryString},'%') or college_nmber like  concat('%', #{queryString},'%'))-->
+        <!--              and college_isDelete = 0 and college_status =1-->
+        <!--        </if>-->
+        <choose>
+            <when test="queryString !=null and queryString.length>0">
+                -- 搜索功能
+                where (class_name like  concat('%', #{queryString},'%') or class_nmber like  concat('%', #{queryString},'%'))
+                and class_isDelete = 0
+            </when>
+            <otherwise>
+                where  class_isDelete = 0
+            </otherwise>
+        </choose>
+            order by class_name desc
+    </select>
+
+    <insert id="insert" parameterType="com.server.entity.ClassEntity">
+        insert into class(major_id,class_name,class_des) values (#{majorId},#{className},#{classDes})
+    </insert>
+
+    <update id="update" parameterType="com.server.entity.ClassEntity">
+        update class
+        <set>
+            <if test="className !=null">
+                class_name=#{className},
+            </if>
+            <if test="classDes !=null">
+                class_des = #{classDes},
+            </if>
+            <if test="majorId !=null">
+                major_id = #{majorId},
+            </if>
+            <if test="classStatus !=null">
+                class_status = #{classStatus},
+            </if>
+        </set>
+        where class_id = #{classId}
+    </update>
+
+    <update id="delete" parameterType="com.server.entity.ClassEntity">
+        update class
+        <set>
+            <if test="classIsDelete !=null">
+                class_isDelete = #{classIsDelete},
+            </if>
+        </set>
+        where class_id = #{classId}
+    </update>
+
+    <update id="updateShow" parameterType="com.server.entity.ClassEntity">
+        update class
+        <set>
+            <if test="classStatus !=null">
+                class_status = #{classStatus},
+            </if>
+        </set>
+        where class_id = #{classId}
+    </update>
+
+    <select id="findClassInfo" resultType="com.server.entity.ClassEntity">
+        select * from class where class_isDelete = 0 and class_status =1 order by class_name desc
+    </select>
+</mapper>

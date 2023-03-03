@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.server.mapper.CanteenMapper">
+    <resultMap id="CanteenResultMap" type="com.server.entity.Canteen">
+        <id column="canteen_id" property="canteenId" />
+        <result column="canteen_name" property="canteenName" />
+        <result column="canteen_img" property="canteenImg" />
+        <result column="canteen_des" property="canteenDes" />
+        <result column="canteen_creatTime" property="canteenCreatTime" />
+        <result column="canteen_status" property="canteenStatus" />
+        <result column="canteen_isDelete" property="canteenIsDelete" />
+        <result column="admin_id" property="adminId"></result>
+        <association property="mallpersonnels" resultMap="adminMap"></association>
+    </resultMap>
+    <resultMap id="adminMap" type="com.server.entity.Mallpersonnel">
+        <id column="pId"  property="pId"/>
+        <result column="pName" property="pName"/>
+    </resultMap>
+    <!-- 分页查询学院数据-->
+    <select id="findPage" resultMap="CanteenResultMap">
+        select  * from  canteen
+        inner join  mallpersonnel
+        on canteen.admin_id = mallpersonnel.pId
+        <!--        <if test="queryString !=null and queryString.length>0">-->
+        <!--            &#45;&#45; 搜索功能-->
+        <!--            where (college_name like  concat('%', #{queryString},'%') or college_nmber like  concat('%', #{queryString},'%'))-->
+        <!--              and college_isDelete = 0 and college_status =1-->
+        <!--        </if>-->
+        <choose>
+            <when test="queryString !=null and queryString.length>0">
+                -- 搜索功能
+                where (canteen_name like  concat('%', #{queryString},'%') or canteen_id like  concat('%', #{queryString},'%'))
+                and canteen_isDelete = 0
+            </when>
+            <otherwise>
+                where  canteen_isDelete = 0
+            </otherwise>
+        </choose>
+                order by canteen_name desc
+    </select>
+
+    <insert id="insert" parameterType="com.server.entity.Canteen">
+        insert into canteen(admin_id,canteen_name,canteen_des,canteen_img) values (#{adminId},#{canteenName},#{canteenDes},#{canteenImg})
+    </insert>
+
+    <update id="update" parameterType="com.server.entity.Canteen">
+        update canteen
+        <set>
+            <if test="canteenName !=null">
+                canteen_name=#{canteenName},
+            </if>
+            <if test="canteenDes !=null">
+                canteen_des = #{canteenDes},
+            </if>
+            <if test="canteenImg !=null">
+                canteen_img = #{canteenImg},
+            </if>
+            <if test="adminId !=null">
+                admin_id = #{adminId},
+            </if>
+            <if test="canteenStatus !=null">
+                canteen_status = #{canteenStatus}
+            </if>
+        </set>
+        where canteen_id = #{canteenId}
+    </update>
+
+    <update id="delete" parameterType="com.server.entity.Canteen">
+        update canteen
+        <set>
+            <if test="canteenIsDelete !=null">
+                canteen_isDelete = #{canteenIsDelete},
+            </if>
+        </set>
+        where canteen_id = #{canteenId}
+    </update>
+
+    <update id="updateShow" parameterType="com.server.entity.Canteen">
+        update canteen
+        <set>
+            <if test="canteenStatus !=null">
+                canteen_status = #{canteenStatus},
+            </if>
+        </set>
+        where canteen_id = #{canteenId}
+    </update>
+    <select id="findCanteenInfo" resultType="com.server.entity.Canteen">
+        select  * from  canteen  where  canteen_isDelete = 0 and canteen_status = 1
+    </select>
+</mapper>

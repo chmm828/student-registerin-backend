@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.server.mapper.CollegeMapper">
+    <!-- 通用查询映射结果 -->
+    <resultMap id="ClassResultMap" type="com.server.entity.ClassEntity">
+        <id column="class_id" property="classId" />
+        <result column="major_id" property="majorId"></result>
+        <result column="class_name" property="className" />
+        <result column="class_des" property="classDes" />
+        <result column="class_creatTime" property="classCreatTime" />
+        <result column="class_isDelete" property="classIsDelete" />
+        <result column="class_status" property="classStatus" />
+    </resultMap>
+    <resultMap id="MajorResultMap" type="com.server.entity.Major">
+        <id column="major_id" property="majorId" />
+        <result column="college_id" property="collegeId" />
+        <result column="major_name" property="majorName" />
+        <result column="major_des" property="majorDes" />
+        <result column="major_creatTime" property="majorCreatTime" />
+        <result column="major_number" property="majorNumber" />
+        <result column="major_status" property="majorStatus" />
+        <result column="major_isDelete" property="majorIsDelete" />
+        <association property="classEntities" resultMap="ClassResultMap"></association>
+    </resultMap>
+    <!-- 班主任查询映射结果 -->
+    <resultMap id="TeacherResultMap" type="com.server.entity.Teacher">
+        <id column="teacher_id" property="teacherId" />
+        <result column="college_id" property="collegeId" />
+        <result column="teacher_name" property="teacherName" />
+        <result column="teacher_sex" property="teacherSex" />
+        <result column="teacher_des" property="teacherDes" />
+        <result column="teacher_img" property="teacherImg" />
+        <result column="teacher_phone" property="teacherPhone" />
+        <result column="teacher_createTime" property="teacherCreateTime" />
+        <result column="teacher_status" property="teacherStatus" />
+    </resultMap>
+
+    <resultMap id="CollegeResult" type="com.server.entity.College">
+        <id property="collegeId" column="college_id"/>
+        <result property="collegeName" column="college_name"/>
+        <result property="collegeImg" column="college_img"/>
+        <result property="collegeDes" column="college_des"/>
+        <result property="collegeNumber" column="college_number"/>
+        <result property="collegeCreateTime" column="college_createTime"/>
+        <result property="collegeIsDelete" column="college_isDelete"/>
+        <result property="collegeStatus" column="college_status"/>
+        <association property="majors" resultMap="MajorResultMap"></association>
+        <association property="teachers" resultMap="TeacherResultMap"></association>
+    </resultMap>
+
+    <!-- 分页查询学院数据-->
+    <select id="findPage" resultType="com.server.entity.College">
+        select  * from  college
+<!--        <if test="queryString !=null and queryString.length>0">-->
+<!--            &#45;&#45; 搜索功能-->
+<!--            where (college_name like  concat('%', #{queryString},'%') or college_nmber like  concat('%', #{queryString},'%'))-->
+<!--              and college_isDelete = 0 and college_status =1-->
+<!--        </if>-->
+        <choose>
+            <when test="queryString !=null and queryString.length>0">
+                -- 搜索功能
+                where (college_name like  concat('%', #{queryString},'%') or college_nmber like  concat('%', #{queryString},'%'))
+                and college_isDelete = 0
+            </when>
+            <otherwise>
+                where  college_isDelete = 0
+            </otherwise>
+
+        </choose>
+         order by college_name desc
+    </select>
+
+    <insert id="insert" parameterType="com.server.entity.College">
+        insert into college(college_name,college_img,college_des,college_number) values (#{collegeName},#{collegeImg},#{collegeDes},#{collegeNumber})
+    </insert>
+
+    <update id="update" parameterType="com.server.entity.College">
+        update college
+        <set>
+            <if test="collegeName !=null">
+                college_name=#{collegeName},
+            </if>
+            <if test="collegeImg !=null">
+                college_img=#{collegeImg},
+            </if>
+            <if test="collegeDes !=null">
+                college_des = #{collegeDes},
+            </if>
+            <if test="collegeNumber !=null">
+                college_number = #{collegeNumber},
+            </if>
+            <if test="collegeStatus !=null">
+                college_status = #{collegeStatus},
+            </if>
+        </set>
+        where college_id = #{collegeId}
+    </update>
+
+    <update id="delete" parameterType="com.server.entity.College">
+        update college
+        <set>
+            <if test="collegeIsDelete !=null">
+                college_isDelete = #{collegeIsDelete},
+            </if>
+        </set>
+        where college_id = #{collegeId}
+    </update>
+
+    <update id="updateShow" parameterType="com.server.entity.College">
+        update college
+        <set>
+            <if test="collegeStatus !=null">
+                college_status = #{collegeStatus},
+            </if>
+        </set>
+        where college_id = #{collegeId}
+    </update>
+
+    <select id="findCollegeInfo" resultMap="CollegeResult">
+        SELECT*FROM (
+                        SELECT*FROM college WHERE college_isDelete=0 AND college_status=1) AS c LEFT JOIN (
+            SELECT*FROM teacher WHERE teacher_isDelete=0 AND teacher_status=1) AS t ON c.college_id=t.college_id ORDER BY c.college_name,t.teacher_name
+    </select>
+</mapper>

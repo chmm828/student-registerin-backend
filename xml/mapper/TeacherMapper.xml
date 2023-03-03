@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.server.mapper.TeacherMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="TeacherResultMap" type="com.server.entity.Teacher">
+        <id column="teacher_id" property="teacherId" />
+        <result column="college_id" property="collegeId" />
+        <result column="teacher_name" property="teacherName" />
+        <result column="teacher_sex" property="teacherSex" />
+        <result column="teacher_des" property="teacherDes" />
+        <result column="teacher_img" property="teacherImg" />
+        <result column="teacher_phone" property="teacherPhone" />
+        <result column="teacher_createTime" property="teacherCreateTime" />
+        <result column="teacher_status" property="teacherStatus" />
+        <association property="colleges" resultMap="CollegeResult"></association>
+    </resultMap>
+
+    <resultMap id="CollegeResult" type="com.server.entity.College">
+        <id property="collegeId" column="college_id"/>
+        <result property="collegeName" column="college_name"/>
+        <result property="collegeImg" column="college_img"/>
+        <result property="collegeDes" column="college_des"/>
+        <result property="collegeNumber" column="college_number"/>
+        <result property="collegeCreateTime" column="college_createTime"/>
+        <result property="collegeIsDelete" column="college_isDelete"/>
+        <result property="collegeStatus" column="college_status"/>
+    </resultMap>
+    <!-- 分页查询老师数据-->
+    <select id="findPage" resultMap="TeacherResultMap">
+
+        select * FROM teacher AS t
+        INNER JOIN college AS c
+        ON t.college_id = c.college_id
+        <!--        <if test="queryString !=null and queryString.length>0">-->
+        <!--            &#45;&#45; 搜索功能-->
+        <!--            where (teacher_name like  concat('%', #{queryString},'%') or teacher_nmber like  concat('%', #{queryString},'%'))-->
+        <!--              and teacher_isDelete = 0 and teacher_status =1-->
+        <!--        </if>-->
+        <choose>
+            <when test="queryString !=null and queryString.length>0">
+                -- 搜索功能
+                where (t.teacher_name like  concat('%', #{queryString},'%') or t.teacher_phone like  concat('%', #{queryString},'%') or t.teacher_id like  concat('%', #{queryString},'%'))
+                and t.teacher_isDelete = 0
+            </when>
+            <otherwise>
+                WHERE t.teacher_isDelete = 0
+            </otherwise>
+        </choose>
+        ORDER BY t.teacher_name DESC
+    </select>
+
+    <insert id="insert" parameterType="com.server.entity.Teacher">
+        insert into teacher(college_id,teacher_name,teacher_sex,teacher_phone,teacher_des,teacher_img) values (#{collegeId},#{teacherName},#{teacherSex},#{teacherPhone},#{teacherDes},#{teacherImg})
+    </insert>
+
+    <update id="update" parameterType="com.server.entity.Teacher">
+        update teacher
+        <set>
+            <if test="collegeId != null">
+                college_id = #{collegeId},
+            </if>
+            <if test="teacherName !=null">
+                teacher_name=#{teacherName},
+            </if>
+            <if test="teacherSex !=null">
+                teacher_sex=#{teacherSex},
+            </if>
+            <if test="teacherPhone !=null">
+                teacher_phone=#{teacherPhone},
+            </if>
+            <if test="teacherDes !=null">
+                teacher_des = #{teacherDes},
+            </if>
+            <if test="teacherImg !=null">
+                teacher_img = #{teacherImg},
+            </if>
+            <if test="teacherStatus !=null">
+                teacher_status = #{teacherStatus},
+            </if>
+        </set>
+        where teacher_id = #{teacherId}
+    </update>
+
+    <update id="delete" parameterType="com.server.entity.Teacher">
+        update teacher
+        <set>
+            <if test="teacherIsDelete !=null">
+                teacher_isDelete = #{teacherIsDelete},
+            </if>
+        </set>
+        where teacher_id = #{teacherId}
+    </update>
+
+    <update id="updateShow" parameterType="com.server.entity.Teacher">
+        update teacher
+        <set>
+            <if test="teacherStatus !=null">
+                teacher_status = #{teacherStatus},
+            </if>
+        </set>
+        where teacher_id = #{teacherId}
+    </update>
+
+    <select id="findTeacherInfo" resultType="com.server.entity.Teacher" >
+        select * from teacher where teacher_isDelete = 0 and teacher_status =1 order by teacher_name desc
+    </select>
+</mapper>

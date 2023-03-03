@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.server.mapper.CounselorMapper">
+    <!-- 通用查询映射结果 -->
+    <resultMap id="CounselorResultMap" type="com.server.entity.Counselor">
+        <id column="counselor_id" property="counselorId" />
+        <result column="college_id" property="collegeId" />
+        <result column="counselor_name" property="counselorName" />
+        <result column="counselor_sex" property="counselorSex" />
+        <result column="counselor_phone" property="counselorPhone" />
+        <result column="counselor_des" property="counselorDes" />
+        <result column="counselor_img" property="counselorImg" />
+        <result column="counselor_createTime" property="counselorCreateTime" />
+        <result column="counselor_status" property="counselorStatus" />
+        <result column="counselor_isDelete" property="counselorIsDelete" />
+        <association property="colleges" resultMap="CollegeResult" />
+    </resultMap>
+
+    <resultMap id="CollegeResult" type="com.server.entity.College">
+        <id property="collegeId" column="college_id"/>
+        <result property="collegeName" column="college_name"/>
+        <result property="collegeImg" column="college_img"/>
+        <result property="collegeDes" column="college_des"/>
+        <result property="collegeNumber" column="college_number"/>
+        <result property="collegeCreateTime" column="college_createTime"/>
+        <result property="collegeIsDelete" column="college_isDelete"/>
+        <result property="collegeStatus" column="college_status"/>
+    </resultMap>
+
+    <!-- 分页查询学院数据-->
+    <select id="findPage" resultMap="CounselorResultMap">
+
+        select * FROM counselor AS cs
+        INNER JOIN college AS c
+        ON cs.college_id = c.college_id
+
+        <!--        <if test="queryString !=null and queryString.length>0">-->
+        <!--            &#45;&#45; 搜索功能-->
+        <!--            where (counselor_name like  concat('%', #{queryString},'%') or counselor_nmber like  concat('%', #{queryString},'%'))-->
+        <!--              and counselor_isDelete = 0 and counselor_status =1-->
+        <!--        </if>-->
+        <choose>
+            <when test="queryString !=null and queryString.length>0">
+                -- 搜索功能
+                where (cs.counselor_name like  concat('%', #{queryString},'%') or cs.counselor_phone like  concat('%', #{queryString},'%')or cs.counselor_number like  concat('%', #{queryString},'%'))
+                and cs.counselor_isDelete = 0
+            </when>
+            <otherwise>
+                where  cs.counselor_isDelete = 0
+            </otherwise>
+        </choose>
+                ORDER BY cs.counselor_name desc
+    </select>
+
+    <insert id="insert" parameterType="com.server.entity.Counselor">
+        insert into counselor(college_id,counselor_name,counselor_sex,counselor_phone,counselor_des,counselor_img) values (#{collegeId},#{counselorName},#{counselorSex},#{counselorPhone},#{counselorDes},#{counselorImg})
+    </insert>
+
+    <update id="update" parameterType="com.server.entity.Counselor">
+        update counselor
+        <set>
+            <if test="collegeId != null">
+                college_id = #{collegeId},
+            </if>
+            <if test="counselorName != null">
+                counselor_name=#{counselorName},
+            </if>
+            <if test="counselorSex != null">
+                counselor_sex=#{counselorSex},
+            </if>
+            <if test="counselorPhone != null">
+                counselor_phone=#{counselorPhone},
+            </if>
+            <if test="counselorDes != null">
+                counselor_des = #{counselorDes},
+            </if>
+            <if test="counselorImg != null">
+                counselor_img = #{counselorImg},
+            </if>
+            <if test="counselorStatus != null">
+                counselor_status = #{counselorStatus},
+            </if>
+        </set>
+        where counselor_id = #{counselorId}
+    </update>
+
+    <update id="delete" parameterType="com.server.entity.Counselor">
+        update counselor
+        <set>
+            <if test="counselorIsDelete !=null">
+                counselor_isDelete = #{counselorIsDelete},
+            </if>
+        </set>
+        where counselor_id = #{counselorId}
+    </update>
+
+    <update id="updateShow" parameterType="com.server.entity.Counselor">
+        update counselor
+        <set>
+            <if test="counselorStatus !=null">
+                counselor_status = #{counselorStatus},
+            </if>
+        </set>
+        where counselor_id = #{counselorId}
+    </update>
+    <select id="findCounselorInfo" resultType="com.server.entity.Counselor">
+        select * from counselor where counselor_isDelete = 0 and counselor_status =1 order by counselor_name desc
+    </select>
+</mapper>

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.server.mapper.ClassroomMapper">
+
+    <resultMap id="ClassroomResultMap" type="com.server.entity.Classroom">
+        <id column="classroom_id" property="classroomId" />
+        <result column="classroom_name" property="classroomName" />
+        <result column="classroom_img" property="classroomImg" />
+        <result column="classroom_des" property="classroomDes" />
+        <result column="classroom_creatTime" property="classroomCreatTime" />
+        <result column="classroom_status" property="classroomStatus" />
+        <result column="classroom_isDelete" property="classroomIsDelete" />
+        <result column="admin_id" property="adminId"></result>
+        <association property="mallpersonnels" resultMap="adminMap"></association>
+    </resultMap>
+
+    <resultMap id="adminMap" type="com.server.entity.Mallpersonnel">
+        <id column="pId"  property="pId"/>
+        <result column="pName" property="pName"/>
+    </resultMap>
+    <!-- 分页查询学院数据-->
+    <select id="findPage" resultMap="ClassroomResultMap">
+        select  * from  classroom
+        inner join  mallpersonnel
+        on  classroom.admin_id =  mallpersonnel.pId
+        <!--        <if test="queryString !=null and queryString.length>0">-->
+        <!--            &#45;&#45; 搜索功能-->
+        <!--            where (college_name like  concat('%', #{queryString},'%') or college_nmber like  concat('%', #{queryString},'%'))-->
+        <!--              and college_isDelete = 0 and college_status =1-->
+        <!--        </if>-->
+        <choose>
+            <when test="queryString !=null and queryString.length>0">
+                -- 搜索功能
+                where (classroom_name like  concat('%', #{queryString},'%') or classroom_id like  concat('%', #{queryString},'%'))
+                and classroom_isDelete = 0
+            </when>
+            <otherwise>
+                where  classroom_isDelete = 0
+            </otherwise>
+        </choose>
+        order by classroom_name desc
+    </select>
+
+    <insert id="insert" parameterType="com.server.entity.Classroom">
+        insert into classroom (admin_id,classroom_name,classroom_des,classroom_img) values (#{adminId},#{classroomName},#{classroomDes},#{classroomImg})
+    </insert>
+
+    <update id="update" parameterType="com.server.entity.Classroom">
+        update classroom
+        <set>
+            <if test="classroomName !=null">
+                classroom_name=#{classroomName},
+            </if>
+            <if test="classroomDes !=null">
+                classroom_des = #{classroomDes},
+            </if>
+            <if test="classroomImg !=null">
+                classroom_img = #{classroomImg},
+            </if>
+            <if test="adminId !=null">
+                admin_id = #{adminId},
+            </if>
+            <if test="classroomStatus !=null">
+                classroom_status = #{classroomStatus}
+            </if>
+        </set>
+        where classroom_id = #{classroomId}
+    </update>
+
+    <update id="delete" parameterType="com.server.entity.Classroom">
+        update classroom
+        <set>
+            <if test="classIsDelete !=null">
+                classroom_isDelete = #{classroomIsDelete},
+            </if>
+        </set>
+        where classroom_id = #{classroomId}
+    </update>
+
+    <update id="updateShow" parameterType="com.server.entity.Classroom">
+        update classroom
+        <set>
+            <if test="classroomStatus !=null">
+                classroom_status = #{classroomStatus},
+            </if>
+        </set>
+        where classroom_id = #{classroomId}
+    </update>
+
+    <select id="findClassroomInfo" resultType="com.server.entity.Classroom">
+        select  * from  classroom  where  classroom_isDelete = 0 and classroom_status = 1
+    </select>
+</mapper>

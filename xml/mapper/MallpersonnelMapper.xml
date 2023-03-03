@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.server.mapper.MallpersonnelMapper">
+    <!--用户信息结果-->
+    <resultMap id="maiMap" type="com.server.entity.Mallpersonnel">
+        <id column="pId"  property="pId"/>
+        <result column="pName" property="pName"/>
+<!--        <result column="openid" property="openid"/>-->
+        <result column="password" property="password"/>
+        <result column="pGender" property="pGender"/>
+        <result column="p_Card" property="pCard"/>
+        <result column="pPhone" property="pPhone"/>
+        <result column="pPosition" property="pPosition"/>
+<!--        <result column="Birthday" property="Birthday"/>-->
+        <result column="pAge" property="pAge"/>
+        <result column="createTime" property="createTime"/>
+        <result column="updateTime" property="updateTime"/>
+        <result column="image" property="image"/>
+        <result column="status" property="status"/>
+        <result column="admin" property="admin"/>
+        <result column="email" property="email"/>
+        <result column="address" property="address"/>
+<!--        <collect property="roles" ofType="com.server.entity.SysRole" select="findRoles" column="pid"/>-->
+    </resultMap>
+     <!--角色结果-->
+    <resultMap id="roleMap" type="com.server.entity.SysRole">
+        <id column="id" property="id"/>
+        <result column="label" property="label"/>
+        <result column="code" property="code"/>
+        <result column="status" property="status"/>
+    </resultMap>
+<!--    <collect property="menus"  select=findMenus" column="id" ofType="com.server.entity.SysMenu"/>-->
+<!--    <collect property="permissions"  select="findPermissions" column="id" ofType="com.server.entity.SysPermission"/>-->
+
+
+    <!--菜单结果-->
+    <resultMap id="menuMap" type="com.server.entity.SysMenu">
+        <id column="id" property="id"/>
+        <result column="path" property="path"/>
+        <result column="icon" property="icon"/>
+        <result column="title" property="title"/>
+        <result column="component" property="component"/>
+        <result column="status" property="status"/>
+    </resultMap>
+
+    <!--权限结果-->
+    <resultMap id="permissionMap" type="com.server.entity.SysPermission">
+        <id column="id" property="id"/>
+        <result column="label" property="label"/>
+        <result column="code" property="code"/>
+        <result column="status" property="status"/>
+    </resultMap>
+
+  <!--获取用户信息-->
+    <select id="findByUsername" parameterType="java.lang.String" resultMap="maiMap">
+        select * from mallpersonnel where pName=#{username}
+    </select>
+
+  <!--根据用户ID查询角色信息-->
+    <select id="findRoles" parameterType="int" resultMap="roleMap">
+      select * from sys_role where  status = 1
+      <if test="pId != null">
+         and id in (select role_id from  user_roles where p_id =#{pId})
+      </if>
+    </select>
+
+    <!--根据角色ID查询权限信息-->
+    <select id="findPermissions" parameterType="int" resultMap="permissionMap">
+       select * from sys_permission where  status = 1
+       <if test="pId">
+          and id in (select permission_id from  roles_permissions where role_id in (SELECT role_id from user_roles where p_id= #{pId}))
+       </if>
+    </select>
+
+    <!--根据角色ID查询菜单信息-->
+    <select id="findMenus" parameterType="int" resultMap="menuMap">
+      select * from sys_menu where parent_id is null and    status = 1
+      <if test="pId">
+          and id in (select menu_id from  roles_meuns where role_id in (select role_id from user_roles where p_id = #{pId}))
+      </if>
+
+    </select>
+
+    <!--获取子菜单信息-->
+    <select id="findChildrenMenu" parameterType="int" resultType="com.server.entity.SysMenu">
+     select * from sys_menu where parent_id =#{id} and   status = 1
+     <if test="pId !=null">
+         and id in (select menu_id from  roles_meuns where role_id in (select role_id from user_roles where p_id =#{pId}))
+     </if>
+    </select>
+
+<!-- 用户的增删改查============================================-！ -->
+
+    <!--分页查询-->
+    <select id="findPage" resultMap="maiMap">
+        select * from mallpersonnel
+        <if test="queryString !=null and queryString.length>0">
+        -- 搜索功能,模糊查询
+        where
+         pName like  concat('%', #{queryString},'%')
+        or pPhone like  concat('%', #{queryString},'%')
+        or address like  concat('%', #{queryString},'%')
+        </if>
+    </select>
+
+
+   <!--添加用户信息-->
+    <insert id="insert" parameterType="com.server.entity.Mallpersonnel" useGeneratedKeys="true" keyProperty="pId">
+      insert into mallpersonnel
+      (`password`,pName,pGender,p_Card,pPhone,pPosition,pAge,createTime,updateTime,image,`status`,admin,email,address)
+       values
+      (#{password},#{pName},#{pGender},#{pCard},#{pPhone},#{pPosition},#{pAge},#{createTime},#{updateTime},#{image},#{status},#{admin},#{email},#{address})
+
+    </insert>
+
+    <!--修改用户信息-->
+    <update id="update" parameterType="com.server.entity.Mallpersonnel">
+        update mallpersonnel
+        <set>
+            <if test="password !=null ">
+                password=#{password},
+            </if>
+            <if test="pName !=null ">
+                pName=#{pName},
+            </if>
+            <if test="pGender !=null ">
+                pGender=#{pGender},
+            </if>
+            <if test="pCard !=null ">
+                p_Card=#{pCard},
+            </if>
+            <if test="pPhone !=null ">
+                pPhone=#{pPhone},
+            </if>
+            <if test="pPosition!=null ">
+                pPosition=#{pPosition},
+            </if>
+            <if test="pAge !=null ">
+                pAge=#{pAge},
+            </if>
+            <if test="image !=null ">
+                image=#{image},
+            </if>
+            <if test="status !=null ">
+                status=#{status},
+            </if>
+            <if test="admin !=null ">
+                admin=#{admin},
+            </if>
+            <if test="email !=null ">
+                email=#{email},
+            </if>
+        </set>
+        where pid =#{pId}
+    </update>
+
+    <!--删除用户信息-->
+    <delete id="delete" parameterType="java.lang.Integer">
+        delete from  mallpersonnel where  pid =#{pId}
+    </delete>
+
+<!--  根据用户信息中的角色列表去添加用户角色-->
+    <insert id="insertUserRoles">
+        insert  into user_roles value (#{pId},#{roleId})
+    </insert>
+
+    <delete id="deleteByUserId">
+        delete from user_roles  where p_id=#{pId}
+    </delete>
+
+  <!--根据Id查询用户信息-->
+    <select id="findBypId" parameterType="java.lang.Integer" resultType="com.server.entity.Mallpersonnel">
+        select *  from mallpersonnel  where pid =#{pId}
+    </select>
+
+    <!--根据用户Id去删除角色信息-->
+    <delete id="deleteRolesByUserId" >
+        delete from user_roles where p_id =#{pId}
+    </delete>
+
+    <select id="findAdminInfo" resultType="com.server.entity.Mallpersonnel" >
+        select * from mallpersonnel where status = 1
+    </select>
+
+</mapper>
